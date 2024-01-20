@@ -10,17 +10,9 @@ import (
 	"github.com/ubombar/go-financial-event-engine/pkg/gofee"
 )
 
-func NewGenesisEventCallback(initialValue int) func(s gofee.State) gofee.State {
-	return func(s gofee.State) gofee.State {
-		state := gofee.NewConcreeteState()
-		state.Accounts("default").SetValue(initialValue)
-		return state
-	}
-}
-
 func NewConstantEventCallback(valueDifference int) func(s gofee.State) gofee.State {
 	return func(s gofee.State) gofee.State {
-		state := gofee.NewConcreeteState()
+		state := s.DeepCopy()
 		state.Accounts("default").SetValue(state.Accounts("default").Value() + valueDifference)
 		return state
 	}
@@ -28,16 +20,32 @@ func NewConstantEventCallback(valueDifference int) func(s gofee.State) gofee.Sta
 
 func main() {
 	// cmd.Execute()
+	genesisEvent := gofee.NewGenesisEvent(time.Now())
 
-	rootEvent := gofee.NewConstantEvent(time.Now(), NewGenesisEventCallback(100_00))
+	event1 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+10))
+	event2 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+10))
+	event3 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+10))
 
-	event1 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+100_00))
-	event2 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(-22_00))
-	event3 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+12_00))
+	uuidGenesis := genesisEvent.UUID()
+	uuidEvent1 := event1.UUID()
+	uuidEvent2 := event2.UUID()
+	uuidEvent3 := event3.UUID()
 
-	rootEvent.AddFork(event1)
-	rootEvent.AddFork(event2)
-	rootEvent.AddFork(event3)
+	genesisEvent.AddFork(event1)
+	genesisEvent.AddFork(event2)
+	genesisEvent.AddFork(event3)
 
-	fmt.Printf("rootEvent: %v\n", rootEvent)
+	// Get the state recorder
+	stateRecorder := gofee.NewDefaultRecorder()
+
+	// Create the initial state, start with 100$
+	initialState := gofee.NewConcreeteState()
+	initialState.Accounts("default").SetValue(10)
+
+	genesisEvent.Propagate(initialState, stateRecorder)
+
+	fmt.Printf("event g %v\n", stateRecorder.Get(uuidGenesis))
+	fmt.Printf("event 1 %v\n", stateRecorder.Get(uuidEvent1))
+	fmt.Printf("event 2 %v\n", stateRecorder.Get(uuidEvent2))
+	fmt.Printf("event 3 %v\n", stateRecorder.Get(uuidEvent3))
 }
