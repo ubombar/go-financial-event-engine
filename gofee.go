@@ -22,9 +22,9 @@ func main() {
 	// cmd.Execute()
 	genesisEvent := gofee.NewGenesisEvent(time.Now())
 
-	event1 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+10))
-	event2 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+10))
-	event3 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+10))
+	event1 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(+10_00))
+	event2 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(-10_00))
+	event3 := gofee.NewConstantEvent(time.Now(), NewConstantEventCallback(-10_00))
 
 	uuidGenesis := genesisEvent.UUID()
 	uuidEvent1 := event1.UUID()
@@ -40,7 +40,7 @@ func main() {
 
 	// Create the initial state, start with 100$
 	initialState := gofee.NewConcreeteState()
-	initialState.Accounts("default").SetValue(10)
+	initialState.Accounts("default").SetValue(100_00)
 
 	genesisEvent.Propagate(initialState, stateRecorder)
 
